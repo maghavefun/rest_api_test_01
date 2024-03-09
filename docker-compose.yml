@@ -1,0 +1,31 @@
+version: '3'
+services:
+
+  #database container
+  sekvenia_test_db:
+    image: postgres:16-alpine
+    ports:
+      - "5340:5340"
+    expose:
+      - "5340"
+    restart: always
+    environment:
+      - POSTGRES_PASSWORD=postgres
+    volumes:
+      - ~/apps/serkvenia_test_db:/var/lib/postgresql/data
+    container_name: sekvenia_test_db
+    command: -p 5340
+
+  backend:
+    build: 
+      dockerfile: Dockerfile
+      context: ./backend
+    container_name: backend
+    ports:
+      - "8888:8888"
+    restart: always
+    depends_on:
+      - sekvenia_test_db
+    volumes:
+      - .:/app
+      - /app/backend/node_modules
