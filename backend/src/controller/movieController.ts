@@ -4,35 +4,54 @@ import httpStatusCodes from '../constants/httpStatusCodes';
 import { ErrorCode, ErrorException } from '../exceptions';
 import { MovieService } from '../services/movieService';
 import {
-  CreateMovie,
+  MovieCreationValidator,
   MovieFilterOptions,
   MovieSortOptions,
   SortEnum,
-  UpdateMovie,
+  MovieUpdatingValidator,
 } from '../validators/movieValidator';
 import { UUIDValidator } from '../validators/defaulValidator';
+import { Movie } from 'src/entity/movieEntity';
 
-export const MovieController = (app: Express) => {
-  const service = new MovieService();
+export const initMovieController = (app: Express) => {
+  const movieService = new MovieService();
 
   app.post(
     '/movie/create',
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const movieNew = new CreateMovie();
-        movieNew.description = req.body.description;
-        movieNew.genres = req.body.genres;
-        movieNew.localized_name = req.body.localized_name;
-        movieNew.original_name = req.body.original_name;
-        movieNew.release_year = req.body.release_year;
-        movieNew.rating = req.body.rating;
+        const {
+          description,
+          genres,
+          localizedName,
+          originalName,
+          releaseYear,
+          rating,
+        } = req.body;
+
+        const movieNew = new MovieCreationValidator();
+        movieNew.description = description;
+        movieNew.genres = genres;
+        movieNew.localizedName = localizedName;
+        movieNew.originalName = originalName;
+        movieNew.releaseYear = releaseYear;
+        movieNew.rating = rating;
 
         const errors = await validate(movieNew);
         if (errors.length) {
           return next(new ErrorException(ErrorCode.ValidationError, errors));
         }
 
-        await service.create(req.body);
+        const movieDTO: Omit<Movie, 'id'> = {
+          description,
+          genres,
+          localizedName,
+          originalName,
+          releaseYear,
+          rating,
+        };
+
+        await movieService.create(movieDTO);
         return res.sendStatus(httpStatusCodes.CREATED);
       } catch (err) {
         return next(new ErrorException(ErrorCode.UnknownError, [err]));
@@ -44,13 +63,21 @@ export const MovieController = (app: Express) => {
     '/movie/update',
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const movieUpdate = new UpdateMovie();
-        movieUpdate.description = req.body.description;
-        movieUpdate.genres = req.body.genres;
-        movieUpdate.localized_name = req.body.localized_name;
-        movieUpdate.original_name = req.body.original_name;
-        movieUpdate.rating = req.body.original_name;
-        movieUpdate.release_year = req.body.release_year;
+        const {
+          description,
+          genres,
+          localizedName,
+          originalName,
+          rating,
+          releaseYear,
+        } = req.body;
+        const movieUpdate = new MovieUpdatingValidator();
+        movieUpdate.description = description;
+        movieUpdate.genres = genres;
+        movieUpdate.localizedName = localizedName;
+        movieUpdate.originalName = originalName;
+        movieUpdate.rating = rating;
+        movieUpdate.releaseYear = releaseYear;
         const errors = await validate(movieUpdate);
 
         const uuidFromRequest = new UUIDValidator();
@@ -66,7 +93,19 @@ export const MovieController = (app: Express) => {
           );
         }
 
-        const movie = await service.updateById(String(req.query.id), req.body);
+        const movideUpdateDTO: Partial<Omit<Movie, 'id'>> = {
+          description,
+          genres,
+          localizedName,
+          originalName,
+          rating,
+          releaseYear,
+        };
+
+        const movie = await movieService.updateById(
+          String(req.query.id),
+          movideUpdateDTO,
+        );
 
         if (!movie) {
           return next(new ErrorException(ErrorCode.NotFound));
@@ -92,7 +131,7 @@ export const MovieController = (app: Express) => {
             new ErrorException(ErrorCode.ValidationError, uuidErrors),
           );
         }
-        await service.deleteById(String(req.query.id));
+        await movieService.deleteById(String(req.query.id));
         return res.sendStatus(httpStatusCodes.OK);
       } catch (err) {
         return next(new ErrorException(ErrorCode.UnknownError, [err]));
@@ -114,7 +153,7 @@ export const MovieController = (app: Express) => {
           );
         }
 
-        const movie = await service.getDetailsById(String(req.query.id));
+        const movie = await movieService.getDetailsById(String(req.query.id));
         return res.status(httpStatusCodes.OK).json(movie);
       } catch (err) {
         return next(new ErrorException(ErrorCode.UnknownError, [err]));
@@ -127,29 +166,28 @@ export const MovieController = (app: Express) => {
     async (req: Request, res: Response, next: NextFunction) => {
       const {
         genres,
-        localized_name,
-        original_name,
+        localizedName,
+        originalName,
         rating,
-        release_year,
+        releaseYear,
         skip,
         take,
       } = req.query;
       const movieSortOptions = new MovieSortOptions();
-      movieSortOptions.rating_sort = req.query.rating_sort as SortEnum;
-      movieSortOptions.release_year_sort = req.query
-        .release_year_sort as SortEnum;
+      movieSortOptions.ratingSort = req.query.ratingSort as SortEnum;
+      movieSortOptions.releaseYearSort = req.query.releaseYearSort as SortEnum;
 
       const sortOptionsErrors = await validate(movieSortOptions);
 
       const movieFilterOptions = new MovieFilterOptions();
       movieFilterOptions.genres = genres as string;
-      movieFilterOptions.localized_name = localized_name as string;
-      movieFilterOptions.original_name = original_name as string;
+      movieFilterOptions.localizedName = localizedName as string;
+      movieFilterOptions.originalName = originalName as string;
       if (rating) {
         movieFilterOptions.rating = Number(rating);
       }
-      if (release_year) {
-        movieFilterOptions.release_year = Number(release_year);
+      if (releaseYear) {
+        movieFilterOptions.releaseYear = Number(releaseYear);
       }
       if (skip) {
         movieFilterOptions.skip = Number(skip);
@@ -170,13 +208,12 @@ export const MovieController = (app: Express) => {
       }
 
       try {
-        const movies = await service.getListBy(
+        const movies = await movieService.getListBy(
           movieFilterOptions,
           movieSortOptions,
         );
         res.status(httpStatusCodes.OK).json(movies);
       } catch (err) {
-        console.log(err);
         return next(new ErrorException(ErrorCode.UnknownError, [err]));
       }
     },

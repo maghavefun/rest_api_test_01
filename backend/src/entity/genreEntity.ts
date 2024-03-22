@@ -4,7 +4,7 @@ import { Movie } from './movieEntity';
 @Entity()
 export class Genre {
   @PrimaryGeneratedColumn('uuid')
-  genreId: string;
+  id: string;
 
   @Column({ type: 'varchar', length: 15, unique: true })
   name: string;

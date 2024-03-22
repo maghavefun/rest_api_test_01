@@ -15,11 +15,11 @@ export class MovieService implements IMovieService {
     this.databaseSource = databaseSource;
   }
 
-  async create(movieDTO: Partial<Omit<Movie, 'movieId'>>) {
+  async create(movieDTO: Partial<Omit<Movie, 'id'>>) {
     try {
       const genres = await this.databaseSource
         .createQueryBuilder(Genre, 'genre')
-        .where('genre.genreId IN (:...genres)', { genres: movieDTO.genres })
+        .where('genre.id IN (:...genres)', { genres: movieDTO.genres })
         .getMany();
 
       const movie = await this.databaseSource
@@ -28,20 +28,15 @@ export class MovieService implements IMovieService {
       movie.genres = genres;
       await this.databaseSource.getRepository(Movie).save(movie);
     } catch (err) {
-      console.log(err);
       throw err;
     }
   }
 
-  async updateById(id: string, updateDTO: Partial<Omit<Movie, 'movieId'>>) {
+  async updateById(id: string, updateDTO: Partial<Omit<Movie, 'id'>>) {
     try {
       let movie: Movie;
-      await this.databaseSource
-        .getRepository(Movie)
-        .update({ movieId: id }, updateDTO);
-      movie = await this.databaseSource
-        .getRepository(Movie)
-        .findOneBy({ movieId: id });
+      await this.databaseSource.getRepository(Movie).update({ id }, updateDTO);
+      movie = await this.databaseSource.getRepository(Movie).findOneBy({ id });
 
       return movie;
     } catch (err) {
@@ -51,7 +46,7 @@ export class MovieService implements IMovieService {
 
   async deleteById(id: string) {
     try {
-      await this.databaseSource.getRepository(Movie).delete({ movieId: id });
+      await this.databaseSource.getRepository(Movie).delete({ id });
     } catch (err) {
       throw err;
     }
@@ -59,9 +54,7 @@ export class MovieService implements IMovieService {
 
   async getDetailsById(id: string): Promise<Movie> {
     try {
-      return await this.databaseSource
-        .getRepository(Movie)
-        .findOneBy({ movieId: id });
+      return await this.databaseSource.getRepository(Movie).findOneBy({ id });
     } catch (err) {
       throw err;
     }
@@ -90,17 +83,20 @@ export class MovieService implements IMovieService {
         moviesQuery.leftJoinAndSelect('movie.genres', 'genre');
       }
 
-      if (filterOptions.original_name) {
-        moviesQuery.andWhere('LOWER(movie.original_name) like LOWER(:o_name)', {
-          o_name: `%${filterOptions.original_name}%`,
-        });
+      if (filterOptions.originalName) {
+        moviesQuery.andWhere(
+          'LOWER(movie.original_name) like LOWER(:originalName)',
+          {
+            originalName: `%${filterOptions.originalName}%`,
+          },
+        );
       }
 
-      if (filterOptions.localized_name) {
+      if (filterOptions.localizedName) {
         moviesQuery.andWhere(
-          'LOWER(movie.localized_name) like LOWER(:l_name)',
+          'LOWER(movie.localized_name) like LOWER(:localizedName)',
           {
-            l_name: `%${filterOptions.localized_name}%`,
+            localizedName: `%${filterOptions.localizedName}%`,
           },
         );
       }
@@ -111,20 +107,20 @@ export class MovieService implements IMovieService {
         });
       }
 
-      if (filterOptions.release_year) {
-        moviesQuery.andWhere('movie.release_year = :release_year', {
-          release_year: filterOptions.release_year,
+      if (filterOptions.releaseYear) {
+        moviesQuery.andWhere('movie.release_year = :releaseYear', {
+          releaseYear: filterOptions.releaseYear,
         });
       }
 
-      if (sortOptions.rating_sort) {
-        moviesQuery.addOrderBy('movie.rating', sortOptions.rating_sort);
+      if (sortOptions.ratingSort) {
+        moviesQuery.addOrderBy('movie.rating', sortOptions.ratingSort);
       }
 
-      if (sortOptions.release_year_sort) {
+      if (sortOptions.releaseYearSort) {
         moviesQuery.addOrderBy(
-          'movie.release_year',
-          sortOptions.release_year_sort,
+          'movie.releaseYear',
+          sortOptions.releaseYearSort,
         );
       }
 
@@ -136,7 +132,7 @@ export class MovieService implements IMovieService {
         moviesQuery.skip(Number(filterOptions.skip));
       }
 
-      return moviesQuery.getMany();
+      return await moviesQuery.getMany();
     } catch (err) {
       throw err;
     }

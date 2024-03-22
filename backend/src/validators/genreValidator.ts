@@ -3,7 +3,7 @@ import { Genre } from 'src/entity/genreEntity';
 
 export type TCreateGenre = Pick<Genre, 'name' | 'description'>;
 
-export class CreateGenre implements TCreateGenre {
+export class GenreCreationValidator implements TCreateGenre {
   @IsString()
   @MinLength(3)
   @MaxLength(15)
@@ -15,7 +15,7 @@ export class CreateGenre implements TCreateGenre {
   description: string;
 }
 
-export class UpdateGenre implements Partial<TCreateGenre> {
+export class GenreUpdatingValidator implements Partial<TCreateGenre> {
   @IsString()
   @MinLength(3)
   @MaxLength(15)

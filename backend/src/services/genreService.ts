@@ -10,24 +10,27 @@ export class GenreService implements IGenreService {
     this.databaseSource = databaseSource;
   }
 
-  async create(genreDTO: Partial<Omit<Genre, 'genreId'>>) {
+  async create(genreDTO: Partial<Omit<Genre, 'id' | 'movies'>>) {
     try {
-      await this.databaseSource.getRepository(Genre).create(genreDTO);
-      await this.databaseSource.getRepository(Genre).save(genreDTO);
+      let genre = await this.databaseSource
+        .getRepository(Genre)
+        .create(genreDTO);
+      await this.databaseSource.getRepository(Genre).save(genre);
     } catch (err) {
       throw err;
     }
   }
 
-  async updateById(id: string, updateDTO: Partial<Omit<Genre, 'genreId'>>) {
+  async updateById(
+    id: string,
+    updateDTO: Partial<Omit<Genre, 'id' | 'movies'>>,
+  ) {
     try {
       let genre: Genre;
       await this.databaseSource
         .getRepository(Genre)
-        .update({ genreId: id }, { ...updateDTO });
-      genre = await this.databaseSource
-        .getRepository(Genre)
-        .findOneBy({ genreId: id });
+        .update({ id }, { ...updateDTO });
+      genre = await this.databaseSource.getRepository(Genre).findOneBy({ id });
 
       return genre;
     } catch (err) {
@@ -37,7 +40,7 @@ export class GenreService implements IGenreService {
 
   async deleteById(id: string) {
     try {
-      await this.databaseSource.getRepository(Genre).delete({ genreId: id });
+      await this.databaseSource.getRepository(Genre).delete({ id });
     } catch (err) {
       throw err;
     }
@@ -45,9 +48,7 @@ export class GenreService implements IGenreService {
 
   async getDetailsById(id: string) {
     try {
-      return await this.databaseSource
-        .getRepository(Genre)
-        .findOneBy({ genreId: id });
+      return await this.databaseSource.getRepository(Genre).findOneBy({ id });
     } catch (err) {
       throw err;
     }

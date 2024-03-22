@@ -16,7 +16,7 @@ BACKEND_PORT=8888
 
 DB_USER=postgres
 DB_PASS=postgres
-DB_NABE=postgres
+DB_NAME=postgres
 DB_HOST=sekvenia_test_db
 DB_PORT=5340
 

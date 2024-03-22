@@ -3,25 +3,36 @@ import { Express, NextFunction, Request, Response } from 'express';
 import httpStatusCodes from '../constants/httpStatusCodes';
 import { ErrorCode, ErrorException } from '../exceptions';
 import { GenreService } from '../services/genreService';
-import { CreateGenre, UpdateGenre } from '../validators/genreValidator';
+import {
+  GenreCreationValidator,
+  GenreUpdatingValidator,
+} from '../validators/genreValidator';
 import { UUIDValidator } from '../validators/defaulValidator';
+import { Genre } from 'src/entity/genreEntity';
 
-export const GenreController = (app: Express) => {
-  const service = new GenreService();
+export const initGenreController = (app: Express) => {
+  const genreService = new GenreService();
 
   app.post(
     '/genre/create',
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const genreNew = new CreateGenre();
-        genreNew.description = req.body.description;
-        genreNew.name = req.body.name;
+        const { description, name } = req.body;
+
+        const genreNew = new GenreCreationValidator();
+        genreNew.description = description;
+        genreNew.name = name;
         const errors = await validate(genreNew);
         if (errors.length) {
           return next(new ErrorException(ErrorCode.ValidationError, errors));
         }
 
-        await service.create(req.body);
+        const genreDTO: Omit<Genre, 'id' | 'movies'> = {
+          name,
+          description,
+        };
+
+        await genreService.create(genreDTO);
         return res.sendStatus(httpStatusCodes.CREATED);
       } catch (err) {
         return next(new ErrorException(ErrorCode.UnknownError, [err]));
@@ -33,11 +44,12 @@ export const GenreController = (app: Express) => {
     '/genre/update',
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const gendreUpdate = new UpdateGenre();
+        const { description, name } = req.body;
+        const gendreUpdate = new GenreUpdatingValidator();
         const uuidFromRequest = new UUIDValidator();
         uuidFromRequest.id = String(req.query.id);
-        gendreUpdate.description = req.body.description;
-        gendreUpdate.name = req.body.name;
+        gendreUpdate.description = description;
+        gendreUpdate.name = name;
         const errors = await validate(gendreUpdate);
         const uuidErrors = await validate(uuidFromRequest);
         if (errors.length || uuidErrors.length) {
@@ -48,7 +60,16 @@ export const GenreController = (app: Express) => {
             ]),
           );
         }
-        const genre = await service.updateById(String(req.query.id), req.body);
+
+        const genreUpdateDTO: Partial<Omit<Genre, 'id' | 'movies'>> = {
+          description,
+          name,
+        };
+
+        const genre = await genreService.updateById(
+          String(req.query.id),
+          genreUpdateDTO,
+        );
 
         if (!genre) {
           return next(new ErrorException(ErrorCode.UnknownError));
@@ -75,7 +96,7 @@ export const GenreController = (app: Express) => {
           );
         }
 
-        await service.deleteById(String(req.query.id));
+        await genreService.deleteById(String(req.query.id));
         return res.sendStatus(httpStatusCodes.OK);
       } catch (err) {
         return next(new ErrorException(ErrorCode.UnknownError, [err]));
@@ -97,7 +118,7 @@ export const GenreController = (app: Express) => {
           );
         }
 
-        const genre = await service.getDetailsById(String(req.query.id));
+        const genre = await genreService.getDetailsById(String(req.query.id));
         return res.status(httpStatusCodes.OK).json(genre);
       } catch (err) {
         return next(new ErrorException(ErrorCode.UnknownError, [err]));
@@ -109,7 +130,7 @@ export const GenreController = (app: Express) => {
     '/genre/list',
     async (req: Request, res: Response, next: NextFunction) => {
       try {
-        const genres = await service.getList();
+        const genres = await genreService.getList();
         res.status(httpStatusCodes.OK).json(genres);
       } catch (err) {
         return next(new ErrorException(ErrorCode.UnknownError, [err]));

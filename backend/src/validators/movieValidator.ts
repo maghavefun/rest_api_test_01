@@ -9,22 +9,23 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+import { Genre } from 'src/entity/genreEntity';
 
-export class CreateMovie {
+export class MovieCreationValidator {
   @IsString()
   @MinLength(2)
   @MaxLength(50)
-  original_name: string;
+  originalName: string;
 
   @IsString()
   @MinLength(2)
   @MaxLength(50)
-  localized_name: string;
+  localizedName: string;
 
   @IsNumber()
   @Min(1800)
   @Max(new Date().getFullYear() + 20)
-  release_year: number;
+  releaseYear: number;
 
   @IsNumber()
   @Min(0)
@@ -38,27 +39,27 @@ export class CreateMovie {
   description: string;
 
   @IsUUID(null, { each: true })
-  genres: string[];
+  genres: Genre[];
 }
 
-export class UpdateMovie {
+export class MovieUpdatingValidator {
   @IsString()
   @MinLength(2)
   @MaxLength(50)
   @IsOptional()
-  original_name?: string;
+  originalName?: string;
 
   @IsString()
   @MinLength(2)
   @MaxLength(50)
   @IsOptional()
-  localized_name?: string;
+  localizedName?: string;
 
   @IsNumber()
   @Min(1800)
   @Max(new Date().getFullYear() + 20)
   @IsOptional()
-  release_year?: number;
+  releaseYear?: number;
 
   @IsNumber()
   @Min(0)
@@ -74,7 +75,7 @@ export class UpdateMovie {
 
   @IsUUID(null, { each: true })
   @IsOptional()
-  genres?: string[];
+  genres?: Genre[];
 }
 
 export enum SortEnum {
@@ -86,12 +87,12 @@ export class MovieSortOptions {
   @IsOptional()
   @IsString()
   @IsEnum(SortEnum)
-  rating_sort?: 'ASC' | 'DESC';
+  ratingSort?: 'ASC' | 'DESC';
 
   @IsOptional()
   @IsString()
   @IsEnum(SortEnum)
-  release_year_sort: 'ASC' | 'DESC';
+  releaseYearSort: 'ASC' | 'DESC';
 }
 
 export class MovieFilterOptions {
@@ -99,19 +100,19 @@ export class MovieFilterOptions {
   @IsString()
   @MinLength(2)
   @MaxLength(50)
-  original_name?: string;
+  originalName?: string;
 
   @IsOptional()
   @IsString()
   @MinLength(2)
   @MaxLength(50)
-  localized_name?: string;
+  localizedName?: string;
 
   @IsOptional()
   @Min(1800)
   @Max(new Date().getFullYear() + 20)
   @IsNumber()
-  release_year?: number;
+  releaseYear?: number;
 
   @IsOptional()
   @Min(0)

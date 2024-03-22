@@ -10,16 +10,16 @@ import { Genre } from './genreEntity';
 @Entity()
 export class Movie {
   @PrimaryGeneratedColumn('uuid')
-  movieId: string;
+  id: string;
 
   @Column({ type: 'varchar', length: 50 })
-  original_name: string;
+  originalName: string;
 
   @Column({ type: 'varchar', length: 50 })
-  localized_name: string;
+  localizedName: string;
 
   @Column({ type: 'int2' })
-  release_year: number;
+  releaseYear: number;
 
   @Column({ type: 'float4', nullable: true })
   rating?: number;

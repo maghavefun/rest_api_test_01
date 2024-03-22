@@ -7,7 +7,7 @@ export const databaseSource = new DataSource({
   port: parseInt(config.DB_PORT),
   username: config.DB_USER,
   password: config.DB_PASS,
-  database: config.DB_NABE,
+  database: config.DB_NAME,
   entities: ['src/entity/*.ts', 'build/entity/*.js'],
   logging: true,
   synchronize: config.NODE_ENV == 'dev',

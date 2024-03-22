@@ -1,8 +1,8 @@
 import * as express from 'express';
 import * as cors from 'cors';
 import { errorHandler } from './middlwares/errorHandler';
-import { MovieController } from './controller/movieController';
-import { GenreController } from './controller/genreController';
+import { initMovieController } from './controller/movieController';
+import { initGenreController } from './controller/genreController';
 
 export const expressApp = async (app: express.Express) => {
   app.use(express.json());
@@ -10,8 +10,8 @@ export const expressApp = async (app: express.Express) => {
   app.use(cors());
 
   //api
-  MovieController(app);
-  GenreController(app);
+  initMovieController(app);
+  initGenreController(app);
   //errorHandler
   app.use(errorHandler);
 };
